@@ -1,8 +1,9 @@
 import React from "react";
 import { useEffect } from "react";
 import { useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { NavLink, Route } from "react-router-dom";
+import { addPost, getPosts } from "../../actions/post.actions";
 import { isEmpty, timestampParser } from "../Utils";
 
 const NewPostForm = () => {
@@ -12,14 +13,40 @@ const NewPostForm = () => {
   const [video, setVideo] = useState("");
   const [file, setFile] = useState();
   const userData = useSelector((state) => state.userReducer);
+  const errors = useSelector((state) => state.errorsReducer.postErrors);
+  const dispatch = useDispatch();
+
+  console.log(errors);
 
   useEffect(() => {
     if (isEmpty(userData)) setIsloading(false);
     handleVideo();
   }, [userData, message, video]);
 
-  const handlePicture = () => {};
-  const handlePost = () => {};
+  const handlePicture = (e) => {
+    setPostPicture(URL.createObjectURL(e.target.files[0]));
+    setFile(e.target.files[0]);
+    setVideo("");
+  };
+
+  const handlePost = async () => {
+    if (message || postPicture || video) {
+      const data = new FormData();
+      data.append("posterId", userData._id);
+      data.append("message", message);
+      if (file) data.append("file", file);
+      data.append("video", video);
+      console.log(data);
+
+      await dispatch(addPost(data));
+      dispatch(getPosts());
+      cancelPost();
+
+    } else {
+      alert("Veuillez entreer un message");
+    }
+  };
+
   const cancelPost = () => {
     setMessage("");
     setPostPicture("");
@@ -86,7 +113,7 @@ const NewPostForm = () => {
                   </div>
                   <div className="content">
                     <p>{message}</p>
-                    <img src="{postPicture}" alt="" />
+                    <img src={postPicture} alt="" />
                     {video && (
                       <iframe
                         src={video}
@@ -118,6 +145,8 @@ const NewPostForm = () => {
                   <button onClick={() => setVideo("")}>Supprimer vidéo</button>
                 )}
               </div>
+              {!isEmpty(errors.format) && <p>{errors.format}</p>}
+              {!isEmpty(errors.maxSize) && <p>{errors.maxSize}</p>}
               <div className="btn-send">
                 {video.length > 20 || message || postPicture ? (
                   <button className="cancel" onClick={cancelPost}>
