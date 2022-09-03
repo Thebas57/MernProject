@@ -10,6 +10,7 @@ import { getUsers } from "./actions/users.actions";
 
 // DEVTOOLS
 import { composeWithDevTools } from "redux-devtools-extension";
+import { getPosts } from "./actions/post.actions";
 
 const store = createStore(
   rootReducer,
@@ -17,6 +18,7 @@ const store = createStore(
 );
 
 store.dispatch(getUsers());
+store.dispatch(getPosts());
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
